@@ -75,7 +75,7 @@ func (f *Faat) MakeKey() []byte {
 	}
 
 	lst.WriteString("_")
-
+	l = len(ys)
 	for i := 0; i < (31-l); i++ {
 		lst.WriteString(KM[uint64(rand.Intn(62))])
 	}
