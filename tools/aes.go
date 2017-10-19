@@ -163,6 +163,4 @@ func Decrypt(ciphertext, key []byte) (plaintext []byte, err error) {
 		ciphertext[gcm.NonceSize():], nil)
 }
 
-func init() {
-	AES_KEY = []byte("5J7zi9tseElj400_rIbY5RkPu54qPCsQ")
-}
+

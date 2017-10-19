@@ -19,3 +19,7 @@ func main() {
 	log.Println(debytes)
 	log.Println(string(debytes))
 }
+
+func init() {
+	tools.AES_KEY = []byte("5J7zi9tseElj400_rIbY5RkPu54qPCsQ")
+}
