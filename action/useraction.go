@@ -53,7 +53,7 @@ func (ua *UserApi) Register(input []byte) error {
 	if err != nil {
 		return err
 	}
-	user_info := make(map[string]string)
+	user_info := &model.CreditUser{}
 	err = json.Unmarshal(decode, user_info)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (ua *UserApi) Register(input []byte) error {
 	ua.lock.RLock()
 	defer ua.lock.RUnlock()
 
-	stmt, err := ua.DB.Prepare("")
+	stmt, err := ua.DB.Prepare("INSERT INTO user_info.t_user_base (user_id,user_name,nike_name,crc_code,pwd,tel,user_code,user_status,create_user,create_datetime) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,current_timestamp)")
 	defer func() {
 		if stmt != nil {
 			stmt.Close()
