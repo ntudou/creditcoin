@@ -3,9 +3,13 @@ package action
 import (
 	"database/sql"
 	"encoding/json"
-	"crypto/sha1"
+	"crypto/sha512"
 	"hash"
 	"sync"
+	"net/http"
+	"io/ioutil"
+	"encoding/binary"
+	"bytes"
 
 	_ "github.com/lib/pq"
 
@@ -16,17 +20,21 @@ import (
 var USERAPI *UserApi
 
 type UserApi struct {
-	lock   sync.RWMutex
+	UserID_URL string
+	UserCode_URL string
+	Lock   sync.RWMutex
 	Hash   hash.Hash
 	PgInfo *model.PgDB
 	DB     *sql.DB
 }
 
-func NewUserApi(key []byte, db *model.PgDB) (*UserApi, error) {
+func NewUserApi(key []byte,userid_url,usercode_url string, db *model.PgDB) (*UserApi, error) {
 	var err error
 	tools.AES_KEY = key
 	ua := &UserApi{}
-	ua.Hash = sha1.New()
+	ua.UserID_URL=userid_url
+	ua.UserCode_URL=usercode_url
+	ua.Hash = sha512.New()
 	ua.PgInfo = db
 	ua.DB, err = sql.Open("postgres", ua.PgInfo.ToString())
 	if err != nil {
@@ -37,8 +45,8 @@ func NewUserApi(key []byte, db *model.PgDB) (*UserApi, error) {
 
 func (ua *UserApi) DBopen() error {
 	var err error
-	ua.lock.Lock()
-	defer ua.lock.Unlock()
+	ua.Lock.Lock()
+	defer ua.Lock.Unlock()
 	if ua.DB != nil {
 		ua.DB.Close()
 	}
@@ -46,6 +54,10 @@ func (ua *UserApi) DBopen() error {
 
 	return err
 
+}
+
+func (ua *UserApi) Login() (bool,error){
+	
 }
 
 func (ua *UserApi) Register(input []byte) error {
@@ -58,8 +70,45 @@ func (ua *UserApi) Register(input []byte) error {
 	if err != nil {
 		return err
 	}
-	ua.lock.RLock()
-	defer ua.lock.RUnlock()
+
+	resp,err:= http.Get(ua.UserCode_URL)
+	defer resp.Body.Close()
+	if err!=nil{
+		return err
+	}
+
+	body,err:=ioutil.ReadAll(resp.Body)
+	if err!=nil{
+		return err
+	}
+
+	user_crc_code,err:=tools.AESEncrypt(body,tools.AES_KEY)
+	if err!=nil{
+		return err
+	}
+	user_info.Crc_code=string(user_crc_code)
+
+	user_id_resp,err:=http.Get(ua.UserID_URL)
+	defer user_id_resp.Body.Close()
+	if err!=nil{
+		return err
+	}
+
+	user_id_body,err:=ioutil.ReadAll(user_id_resp.Body)
+	if err!=nil{
+		return err
+	}
+
+	user_info.User_id=binary.BigEndian.Uint64(user_id_body)
+
+	pwd_buf:=&bytes.Buffer{}
+	pwd_buf.WriteString(user_info.Pwd)
+	pwd_buf.Write(body)
+	pwd_sha:=ua.Hash.Sum(pwd_buf.Bytes())
+	pwd_str:=string(pwd_sha)
+
+	ua.Lock.RLock()
+	defer ua.Lock.RUnlock()
 
 	stmt, err := ua.DB.Prepare("INSERT INTO user_info.t_user_base (user_id,user_name,nike_name,crc_code,pwd,tel,user_code,user_status,create_user,create_datetime) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,current_timestamp)")
 	defer func() {
@@ -71,7 +120,8 @@ func (ua *UserApi) Register(input []byte) error {
 		ua.DBopen()
 		return err
 	}
-	_, err = stmt.Exec()
+
+	_, err = stmt.Exec(user_info.User_id,user_info.User_name,user_info.Nike_name,user_info.Crc_code,pwd_str,user_info.Tel,user_info.User_code,user_info.User_status,user_info.Create_user)
 	if err != nil {
 		ua.DBopen()
 		return err

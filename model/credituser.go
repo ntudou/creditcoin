@@ -5,14 +5,14 @@ import (
 )
 
 type CreditUser struct {
-	user_id         uint64    `json:"user_id"`
-	user_name       string    `json:"user_name"`
-	nike_name       string    `json:"nike_name"`
-	crc_code        string    `json:"crc_code"`
-	pwd             string    `json:"pwd"`
-	tel             string    `json:"tel"`
-	user_code       string    `json:"user_code"`
-	user_status     string    `json:"user_status"`
-	create_user     uint64    `json:"create_user"`
-	create_datetime time.Time `json:"create_datetime"`
+	User_id         uint64    `json:"user_id"`
+	User_name       string    `json:"user_name"`
+	Nike_name       string    `json:"nike_name"`
+	Crc_code        string    `json:"crc_code"`
+	Pwd             string    `json:"pwd"`
+	Tel             string    `json:"tel"`
+	User_code       string    `json:"user_code"`
+	User_status     string    `json:"user_status"`
+	Create_user     uint64    `json:"create_user"`
+	Create_datetime time.Time `json:"create_datetime"`
 }
