@@ -10,15 +10,18 @@ import (
 	"creditcoin/tools"
 	"creditcoin/model"
 )
-type UserCoin struct {
+
+var USERCOINAPI *UserCoinApi
+
+type UserCoinApi struct {
 	Lock sync.RWMutex
 	PgInfo *model.PgDB
 	DB *sql.DB
 }
 
-func NewUserCoin(pg *model.PgDB) (*UserCoin,error){
+func NewUserCoin(pg *model.PgDB) (*UserCoinApi,error){
 	var err error
-	uc := & UserCoin{}
+	uc := & UserCoinApi{}
 	uc.PgInfo=pg
 	uc.DB, err = sql.Open("postgres", uc.PgInfo.ToString())
 	if err != nil {
@@ -27,7 +30,7 @@ func NewUserCoin(pg *model.PgDB) (*UserCoin,error){
 	return uc, err
 }
 
-func (uc *UserCoin) DBopen() error {
+func (uc *UserCoinApi) DBopen() error {
 	var err error
 	uc.Lock.Lock()
 	defer uc.Lock.Unlock()
@@ -37,6 +40,7 @@ func (uc *UserCoin) DBopen() error {
 	uc.DB, err = sql.Open("postgres", uc.PgInfo.ToString())
 
 	return err
-
 }
+
+func (uc *UserCoinApi)GetInfo(user_id uint64)
 

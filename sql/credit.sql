@@ -38,6 +38,8 @@ CREATE TABLE t_user_coin(
 user_id bigint NOT NULL ,
 user_coin bigint NOT NULL DEFAULT 0,
 crc_coin VARCHAR(512) NOT NULL '',
+limited_coin bigint NOT NULL DEFAULT 0,
+crc_limited VARCHAR(512) NOT NULL '',
 update_datetime TIMESTAMP without time zone NOT NULL ,
 PRIMARY KEY (user_id),
 );
