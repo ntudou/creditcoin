@@ -18,7 +18,7 @@ func NewUserCoin(user_id uint64,user_coin,limited_coin int64) (*UserCoin,error){
 	uc.User_id=user_id
 	uc.User_coin=user_coin
 	uc.Limited_coin=limited_coin
-	crc_coin_buf,err := tools.AESDecrypt([]byte(strconv.FormatInt(user_coin,10)),tools.AES_KEY)
+	crc_coin_buf,err := tools.AESEncrypt([]byte(strconv.FormatInt(user_coin,10)),tools.AES_KEY)
 	if err!=nil{
 		return nil,err
 	}
