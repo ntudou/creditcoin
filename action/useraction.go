@@ -57,6 +57,38 @@ func (ua *UserApi) DBopen() error {
 
 }
 
+func (ua *UserApi) UserNameSearch(input []byte) (bool, error) {
+	decode, err := tools.AESDecrypt(input, tools.AES_KEY)
+	if err != nil {
+		return false, err
+	}
+	user_name := string(decode)
+	rows, err := ua.DB.Query("SELECT count(1) FROM user_info.t_user_base WHERE user_name=$1", user_name)
+	defer func() {
+		if rows != nil {
+			rows.Close()
+		}
+	}()
+	if err != nil {
+		ua.DBopen()
+		return false, err
+	}
+	if rows.Next(){
+		var user_count uint64
+		err= rows.Scan(&user_count)
+		if err!=nil{
+			return  false,err
+		}
+		if user_count<1{
+			return true,nil
+		}else {
+			return false,errors.New("user name is exist")
+		}
+	}else {
+		return false,errors.New("result is empty")
+	}
+}
+
 func (ua *UserApi) InputPwd(pr *model.PasswdReset) (bool, error) {
 	resp, err := http.Get(ua.UserCode_URL)
 	defer resp.Body.Close()
