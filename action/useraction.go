@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"encoding/binary"
 	"bytes"
+	"errors"
 
 	_ "github.com/lib/pq"
 
@@ -56,8 +57,56 @@ func (ua *UserApi) DBopen() error {
 
 }
 
-func (ua *UserApi) Login() (bool,error){
-	
+func (ua *UserApi) Login(input []byte) (bool,error){
+	decode,err:=tools.AESDecrypt(input,tools.AES_KEY)
+	if err!=nil{
+		return false,err
+	}
+	user_login := &model.Userlogin{}
+	err = json.Unmarshal(decode,user_login)
+	if err!=nil{
+		return  false,err
+	}
+
+	rows,err:=ua.DB.Query("SELECT crc_code,pwd FROM user_info.t_user_base WHERE user_name=$1",user_login.User_name)
+
+	defer func() {
+		if rows!=nil{
+			rows.Close()
+		}
+	}()
+	if err!=nil{
+		ua.DBopen()
+		return false,err
+	}
+
+	if rows.Next(){
+		var crc_code string
+		var pwd string
+		err=rows.Scan(&crc_code,&pwd)
+		if err!=nil{
+			return false,err
+		}
+		crc_decode,err:=tools.AESDecrypt([]byte(crc_code),tools.AES_KEY)
+		if err!=nil{
+			return false,err
+		}
+
+		pwd_buf:=&bytes.Buffer{}
+		pwd_buf.WriteString(user_login.Pwd)
+		pwd_buf.Write(crc_decode)
+		pwd_sha:=ua.Hash.Sum(pwd_buf.Bytes())
+
+		if string(pwd_sha) == pwd{
+			return true,nil
+		}else {
+			return false,errors.New("Incorrect user name/password")
+		}
+
+	}else {
+		return false,errors.New("Incorrect user name/password")
+	}
+
 }
 
 func (ua *UserApi) Register(input []byte) error {
