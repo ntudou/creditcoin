@@ -27,7 +27,7 @@ UNIQUE (user_name)
 
 
 usercoin
-create user user_coin_u with ENCRYPTED password '5J7zqm59fHeho00_r35ger1jwnWoQvDA';
+create user user_coin_u with ENCRYPTED password '5J7zH524pCVoo00_BetLXsmVxzO0Ajyb';
 CREATE DATABASE user_coin WITH OWNER user_coin_u ENCODING UTF8 TEMPLATE template0;
 \c user_coin
 CREATE SCHEMA user_coin;
@@ -45,19 +45,24 @@ PRIMARY KEY (user_id),
 );
 
 coinlog
-create user coin_log_u with ENCRYPTED password '5J7zqm59fHeho00_r35ger1jwnWoQvDA';
+create user coin_log_u with ENCRYPTED password '5J7zH51XyO3tQ00_3NQnT2o7ibyLhj8s';
 CREATE DATABASE coin_log WITH OWNER coin_log_u ENCODING UTF8 TEMPLATE template0;
 \c coin_log
 CREATE SCHEMA coin_log;
 ALTER SCHEMA coin_log OWNER to coin_log_u;
 revoke create on schema public from public;
 
-CREATE TYPE coin_log_type AS ENUM ('low','normal','lock');
+CREATE TYPE coin_log_type AS ENUM ('recharge','lock','cancommit','precommit','docommit');
 
 CREATE TABLE t_coin_log(
 user_id bigint NOT NULL ,
 create_datetime TIMESTAMP without time zone NOT NULL ,
+log_type coin_log_type NOT NULL ,
+pre_coin bigint NOT NULL DEFAULT 0,
+current_coin bigint NOT NULL DEFAULT 0,
+pre_limited bigint NOT NULL DEFAULT 0,
+current_limited bigint NOT NULL DEFAULT 0,
 user_coin bigint NOT NULL DEFAULT 0,
 log_info VARCHAR(2048) NOT NULL '',
-PRIMARY KEY (user_id),
+PRIMARY KEY (user_id,create_datetime,log_type)
 );
