@@ -9,12 +9,21 @@ import (
 
 func HttpRnd(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("t")
-	if param==""{
-		w.Write(action.FAAT.MakeKey())
-	}else if param=="uid" {
-		w.Write(action.FEET.Get())
-	}else {
-		w.Write(action.FAAT.MakeKey())
+	if param == "" {
+		result, err := action.FAAT.MakeKey()
+		if err == nil {
+			w.Write(result)
+		}
+	} else if param == "uid" {
+		result, err := action.FEET.Get()
+		if err == nil {
+			w.Write(result)
+		}
+	} else {
+		result, err := action.FAAT.MakeKey()
+		if err == nil {
+			w.Write(result)
+		}
 	}
 
 }
@@ -27,8 +36,8 @@ func main() {
 	}
 }
 
-func init(){
-	server_id:=uint64(0)
+func init() {
+	server_id := uint64(0)
 	action.KeyMakerInit(server_id)
 	action.MakeIdInit(server_id)
 }

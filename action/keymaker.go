@@ -1,54 +1,59 @@
 package action
 
 import (
-	"time"
 	"bytes"
-	"strconv"
+	"errors"
 	"math/rand"
+	"strconv"
 	"sync"
+	"time"
 )
 
 var KM map[uint64]string
 var FAAT *Faat
 
-type Faat struct{
-	Serverid uint64
-	Lock sync.Mutex
+type Faat struct {
+	Serverid  uint64
+	Lock      sync.Mutex
 	Timestamp int64
-	Autoid uint64
+	Autoid    uint64
 }
 
 func NewFaat(id uint64) *Faat {
-	f:=&Faat{}
-	f.Timestamp=time.Now().UnixNano()
-	f.Autoid=0
-	f.Serverid=id
+	f := &Faat{}
+	f.Timestamp = time.Now().UnixNano()
+	f.Autoid = 0
+	f.Serverid = id
 	return f
 }
 
-func (f *Faat) MakeKey() []byte {
+func (f *Faat) MakeKey() ([]byte, error) {
 	t := time.Now()
-	n:=t.UnixNano()
+	n := t.UnixNano()
 	lst := bytes.Buffer{}
 	var ys []uint64
 	f.Lock.Lock()
 	defer f.Lock.Unlock()
 
-	if n==f.Timestamp{
-		f.Autoid++
-	}else{
-		f.Timestamp=n
-		f.Autoid=0
+	if n == f.Timestamp {
+		if f.Autoid < 99999 {
+			f.Autoid++
+		} else {
+			return nil, errors.New("Autoid is max")
+		}
+	} else {
+		f.Timestamp = n
+		f.Autoid = 0
 	}
 	//9999999999999999999
 	//20060102150405
 	ymd, _ := strconv.ParseUint(t.Format("20060102150405"), 10, 64)
 	nsd := uint64(t.Nanosecond())
-	aid:=f.Autoid
-	for{
+	aid := f.Autoid
+	for {
 		ys = append(ys, aid%uint64(62))
-		aid=aid / uint64(62)
-		if aid==0{
+		aid = aid / uint64(62)
+		if aid == 0 {
 			break
 		}
 	}
@@ -57,14 +62,14 @@ func (f *Faat) MakeKey() []byte {
 	for {
 		ys = append(ys, nsd%uint64(62))
 		nsd = nsd / uint64(62)
-		if nsd==0{
+		if nsd == 0 {
 			break
 		}
 	}
 	for {
 		ys = append(ys, ymd%uint64(62))
 		ymd = ymd / uint64(62)
-		if ymd==0{
+		if ymd == 0 {
 			break
 		}
 	}
@@ -76,14 +81,14 @@ func (f *Faat) MakeKey() []byte {
 
 	lst.WriteString("_")
 	l = len(ys)
-	for i := 0; i < (31-l); i++ {
+	for i := 0; i < (31 - l); i++ {
 		lst.WriteString(KM[uint64(rand.Intn(62))])
 	}
 
-	return lst.Bytes()
+	return lst.Bytes(), nil
 }
 
-func KeyMakerInit(id uint64){
+func KeyMakerInit(id uint64) {
 	FAAT = NewFaat(id)
 	rand.Seed(time.Now().UnixNano())
 	KM = map[uint64]string{

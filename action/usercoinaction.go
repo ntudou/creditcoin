@@ -2,27 +2,27 @@ package action
 
 import (
 	"database/sql"
-	"encoding/json"
+	//"encoding/json"
 	"sync"
 
 	_ "github.com/lib/pq"
 
-	"creditcoin/tools"
 	"creditcoin/model"
+	//"creditcoin/tools"
 )
 
 var USERCOINAPI *UserCoinApi
 
 type UserCoinApi struct {
-	Lock sync.RWMutex
+	Lock   sync.RWMutex
 	PgInfo *model.PgDB
-	DB *sql.DB
+	DB     *sql.DB
 }
 
-func NewUserCoin(pg *model.PgDB) (*UserCoinApi,error){
+func NewUserCoin(pg *model.PgDB) (*UserCoinApi, error) {
 	var err error
-	uc := & UserCoinApi{}
-	uc.PgInfo=pg
+	uc := &UserCoinApi{}
+	uc.PgInfo = pg
 	uc.DB, err = sql.Open("postgres", uc.PgInfo.ToString())
 	if err != nil {
 		return nil, err
@@ -42,5 +42,4 @@ func (uc *UserCoinApi) DBopen() error {
 	return err
 }
 
-func (uc *UserCoinApi)GetInfo(user_id uint64)
-
+//func (uc *UserCoinApi)GetInfo(user_id uint64)

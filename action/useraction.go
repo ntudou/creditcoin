@@ -1,21 +1,21 @@
 package action
 
 import (
-	"database/sql"
-	"encoding/json"
-	"crypto/sha512"
-	"hash"
-	"sync"
-	"net/http"
-	"io/ioutil"
-	"encoding/binary"
 	"bytes"
+	"crypto/sha512"
+	"database/sql"
+	"encoding/binary"
+	"encoding/json"
 	"errors"
+	"hash"
+	"io/ioutil"
+	"net/http"
+	"sync"
 
 	_ "github.com/lib/pq"
 
-	"creditcoin/tools"
 	"creditcoin/model"
+	"creditcoin/tools"
 )
 
 var USERAPI *UserApi
@@ -73,19 +73,19 @@ func (ua *UserApi) UserNameSearch(input []byte) (bool, error) {
 		ua.DBopen()
 		return false, err
 	}
-	if rows.Next(){
+	if rows.Next() {
 		var user_count uint64
-		err= rows.Scan(&user_count)
-		if err!=nil{
-			return  false,err
+		err = rows.Scan(&user_count)
+		if err != nil {
+			return false, err
 		}
-		if user_count<1{
-			return true,nil
-		}else {
-			return false,errors.New("user name is exist")
+		if user_count < 1 {
+			return true, nil
+		} else {
+			return false, errors.New("user name is exist")
 		}
-	}else {
-		return false,errors.New("result is empty")
+	} else {
+		return false, errors.New("result is empty")
 	}
 }
 
@@ -161,7 +161,7 @@ func (ua *UserApi) PwdReset(input []byte) (bool, error) {
 		pwd_sha := ua.Hash.Sum(pwd_buf.Bytes())
 
 		if string(pwd_sha) == pwd {
-			return ua.InputPwd(pr)
+			return ua.InputPwd(&pr)
 		} else {
 			return false, errors.New("Incorrect user name/password")
 		}
